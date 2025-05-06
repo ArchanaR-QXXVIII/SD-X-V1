@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace MyCoreApp.Controllers
 {
-    [ApiController]
-    //[Route("[controller]")]
-	[Route("api/v1/[controller]")]
+    
+    [Route("api/[controller]")]
+	[ApiController]
+	//[Route("api/v1/QMController")]
 	public class QMController : ControllerBase
     {
       
@@ -17,11 +19,25 @@ namespace MyCoreApp.Controllers
         }
 
 
-		[HttpGet(Name = "GetQMOperations")]
+		[HttpGet("QMOperations")]
 		public IEnumerable<QMPerson> GetQMOperations()
-		{
-            return GetQMOperations()
-			.ToArray();
-		}
-	}
+        {
+            try
+            {
+                return GetQMOperations()
+            .ToArray();
+
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+
+                _logger.Log("GetQMOperations");
+            }
+
+
+
+        }
+    }
 }
