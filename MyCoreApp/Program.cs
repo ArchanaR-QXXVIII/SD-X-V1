@@ -1,7 +1,11 @@
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.OpenApi.Models;
-using MyCoreApp;
-using System;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using WebAppMiddleware.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,105 +18,51 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 // Other startup code...
+//private readonly IConfiguration Configuration { get; set; }
+void Startup(IConfiguration configuration)
+{
+	Configuration = configuration;
+}
 
 
-var app = builder.Build();
+// This method gets called by the runtime. Use this method to add services to the container.
+void ConfigureServices(IServiceCollection services)
+{
+	services.AddControllersWithViews();
+}
 
-// Configure the HTTP request pipeline.
+void Configure(IApplicationBuilder app, IHostingEnvironment env)
+{
+	// ...
+	app.UseRouter(BuildRouter(app));
+	// ...
+	app.UseMvc();
+}
+IRouter BuildRouter(IApplicationBuilder applicationBuilder)
+{
+	var builder = new RouteBuilder(applicationBuilder);
 
+	// use middlewares to configure a route
+	builder.MapMiddlewareGet("/api/v1", appBuilder => {
+		appBuilder.Use(Middleware1);
+		appBuilder.Use(Middleware2);
+		//appBuilder.Use(RequestValidationMiddleware);
+		appBuilder.UseMvc();          // use a MVC here ...
+	});
 
-//void ConfigureServices(IServiceCollection services)
-//{
-	
-//	services.AddEndpointsApiExplorer();
-//	services.AddRouting();
+	builder.MapMiddlewarePost("/api/v1", appBuilder => {
+		appBuilder.Use(Middleware1);
 
-//	services.AddSingleton<QMOperation>();
-//	services.AddControllers();
-//	services.AddSwaggerGen();
-	
+		//appBuilder.Use(Middleware2);
+		//appBuilder.Use(RequestValidationMiddleware);
+		appBuilder.UseMvc();
+	});
+	// ....
 
-//	services.AddSwaggerGen(options =>
-//	{
-
-//		options.SwaggerDoc("v1", new OpenApiInfo
-//		{
-//			Title = "QMOperation - Catalog HTTP API",
-//			Version = "v1",
-//			Description = "The Microservice HTTP API"
-//		});
-//	});
-//	// Add other services
-//}
-
-
-
-//void Configure(IApplicationBuilder app, Action<IEndpointRouteBuilder> configure)
-//{
-
-//	app.Run(async context => {
-//		await context.Response.WriteAsync("Response from Run Middleware");
-//	});
-
-//	if (configure == null)
-//	{
-//		throw new ArgumentNullException(nameof(configure));
-//	}
-	
+	return builder.Build();
+}
 
 
-//	app.Use(async (context, next) =>
-//	{
-//		await context.Response.WriteAsync("Use Middleware1 Incoming Request\n");
-//		await next();
-//		await context.Response.WriteAsync("Use Middleware1 Outgoing Response\n");
-//	});
-
-//	app.Use(async (context, next) =>
-//	{
-//		await context.Response.WriteAsync("Use Middleware2 Incoming Request\n");
-//		await next();
-//		await context.Response.WriteAsync("Use Middleware2 Outgoing Response\n");
-//	});
-
-//	app.Run(async context => {
-//		await context.Response.WriteAsync("Run Middleware3 Request Handled and Response Generated\n");
-//	});
-
-
-//	app.UseDeveloperExceptionPage();
-//		app.UseSwagger();
-	
-//		app.UseSwaggerUI(c =>
-//		{
-//			c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-//		});
-	
-
-//	app.UseHttpsRedirection();
-//	app.UseStaticFiles();
-//	app.UseRouting();
-
-//	app.UseEndpoints(endpoints =>
-//	{
-//		endpoints.MapGet("/", async context =>
-//		{
-//			await context.Response.WriteAsync("Hello World!");
-//		});
-
-//		// Define other routes
-//		endpoints.MapControllerRoute(
-//			name: "default",
-//			pattern: "{controller=QMController}/{action=Index}");
-//	});
-
-
-//	app.UseHttpsRedirection();
-
-//	app.UseAuthorization();
-
-//	app.UseCors();
-//}
 
 static void Main(string[] args)
 {
@@ -120,6 +70,7 @@ static void Main(string[] args)
 	var services = builder.Services;
 
 	// Add DbContext
+
 	
 
 	// Add Swagger services
@@ -142,22 +93,47 @@ static void Main(string[] args)
 		app.UseSwaggerUI(c =>
 		{
 			c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-			c.RoutePrefix = "https://localhost:5826/swagger";
+			c.RoutePrefix = "https://localhost:5000/index/id";
 		});
+
+		
+
 	}
+
+
+	//app.UseApiLog();
+	app.Map("/api", ApiLogApps);
+	app.Map("/exlog", ExceptionLogApps);
 
 	// Enable endpoint routing
 	app.UseRouting();
+	app.UseEndpoints(endpoints =>
+	{
+		endpoints.MapGet("/", async context =>
+		{
+			await context.Response.WriteAsync("Hello World!");
+		});
 
+		// Define other routes
+		endpoints.MapControllerRoute(
+			name: "default",
+			pattern: "{controller=QMController}/{action=Index}/{id:int}");
+	});
 	// Configure authentication and authorization
 	app.UseAuthentication();
 	app.UseAuthorization();
 
-	// Map controllers
-	app.MapControllers();
-
+	app.UseEndpoints(endpoints =>
+	{
+		endpoints.MapControllers();
+	});
 	app.Run();
 }
-    
 
+static void ApiLogApps(IApplicationBuilder app)
+{
+	//app.Run(() => )
+	app.UseApiLog();
+	app.UseMvc();
+}
 

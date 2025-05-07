@@ -1,10 +1,15 @@
-﻿using System;
-
+﻿using System.Diagnostics;
+using System.IO;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 public class QMOperation : IQMOperation
 {
 	private readonly List<QMPerson> _person = new List<QMPerson>();
-
+	public QMMiddleware middleware;
 	public QMOperation(List<QMPerson> person)
 	{
 		_person = person;	
@@ -28,7 +33,11 @@ public class QMOperation : IQMOperation
 
 			}
 
-			return personImg;
+
+			middleware();
+
+
+			//return personImg;
 		}
 		catch(Exception ex) 
 		{

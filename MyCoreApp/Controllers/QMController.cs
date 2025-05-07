@@ -8,10 +8,9 @@ using Microsoft.AspNetCore.Http.HttpResults;
 namespace MyCoreApp.Controllers
 {
     
-    [Route("api/[controller]")]
-	[ApiController]
-	//[Route("api/v1/QMController")]
-	public class QMController : ControllerBase
+   
+	[Route("api/[Controller]")]
+	public class QMController : Controller
     {
 
 
@@ -27,44 +26,37 @@ namespace MyCoreApp.Controllers
 			_apiControllerInspector = apiControllerInspector;
 		}
 
-		[HttpGet("api/qmcontroller/index")]
-		public IActionResult Index()
+		[HttpGet("home/index/id")]
+		public IActionResult Index(int id)
 		{
-			List<QMPerson> personRead = new List<QMPerson>();
-			QMPerson[] people = new QMPerson[4];
-			people[0] = new QMPerson("Ali", 30);
-			people[1] = new QMPerson("Bindu", 25);
-			people[2] = new QMPerson("Sidhu", 35);
-			people[3] = new QMPerson("Sid", 36);
-
-			foreach (QMPerson personItem in people) {
-
-				for (int i = 0; i <= people.Length - 1; i++)
-				{
-					people[i] = new QMPerson(personItem?._Name, personItem._Age);
-					personRead.Add(people[i]);
-				}
-			}
 			
-			
-				return GetData();
+			return GetData();
 				return PostData(personRead);
 			
 		}
 
 
-			[HttpGet("api/qmcontroller/getdata")]
-		public IActionResult GetData()
-		{
+			[HttpGet("getdata")]
+			public IActionResult GetData()
+			{
 			try
 			{
-				IEnumerable<QMPerson> response= _operation.GetQMOperations().ToArray();
+				
+				HttpResponseMessage response = await _operation.GetQMOperations().ToArray();
 
-				if (response != null)
-					return Ok(new { Message = "Success" });
+				if (response.IsSuccessStatusCode)
+				{
+					string data = await response.Content.ReadAsStringAsync();
+					Console.WriteLine("Data from API: " + data);
+					return Ok(data);
+				}
 				else
+				{
+					Console.WriteLine("Error fetching data");
 					return null;
+				}
 
+				
 			}
 			catch (Exception ex)
 			{
@@ -75,17 +67,30 @@ namespace MyCoreApp.Controllers
 			
 		}
 
-		[HttpGet("api/qmcontroller/postdata")]
+		[HttpPost("postdata")]
 		public IActionResult PostData([FromBody]  IEnumerable<QMPerson> persons)
 		{
 			try
 			{
+				
+				var client = _httpClientFactory.CreateClient();
+				var request = new HttpRequestMessage(HttpMethod.Get, persons);
 
-				IEnumerable<QMPerson> response = _operation.AddQMOperation(persons);
-				if (response!=null)
-					return Ok(new { Message = "Success" });
+				// Optionally add headers
+				request.Headers.Add("Accept", "application/json");
+				HttpResponseMessage response = await _operation.AddQMOperation(persons).ToArray();
+
+				if (response.IsSuccessStatusCode)
+				{
+					string data = await response.Content.ReadAsStringAsync();
+					Console.WriteLine("Data from API: " + data);
+					return Ok(data);
+				}
 				else
+				{
+					Console.WriteLine("Error fetching data");
 					return null;
+				}
 			}
 			catch (Exception ex)
 			{
@@ -105,7 +110,7 @@ namespace MyCoreApp.Controllers
 		public static void Main(string[] args)
 		{
 
-			ApiControllerInspector.ListApiEndpoints(typeof(QMController));
+			ApiControllerInspector.ListApiEndpoints(typeof(Controller));
 		}
 	}
 }
