@@ -1,5 +1,6 @@
 ﻿using System;
 
+
 public class QMOperation : IQMOperation
 {
 	private readonly List<QMPerson> _person = new List<QMPerson>();
@@ -21,7 +22,7 @@ public class QMOperation : IQMOperation
 			{
 				for (int i = 0; i <= people.Length - 1; i++)
 				{
-					people[i] = new QMPerson(personItem._Name, personItem._Age);
+					people[i] = new QMPerson(personItem?._Name, personItem._Age);
 					personImg.Add(people[i]);
 				}
 
@@ -57,7 +58,7 @@ public class QMOperation : IQMOperation
 			{
 				for (int i = 0; i <= people.Length - 1; i++)
 				{
-					people[i] = new QMPerson(personItem._Name, personItem._Age);
+					people[i] = new QMPerson(personItem?._Name, personItem._Age);
 					personRead.Add(people[i]);
 				}
 
